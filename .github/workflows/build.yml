@@ -1,0 +1,116 @@
+name: Build & Release ACMigo
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+          - os: macos-latest
+            platform: mac
+          - os: ubuntu-latest
+            platform: linux
+
+    runs-on: ${{ matrix.os }}
+    name: Build (${{ matrix.platform }})
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 15
+          max_attempts: 3
+          command: npm install
+        env:
+          ELECTRON_MIRROR: "https://npmmirror.com/mirrors/electron/"
+
+      - name: Install Linux build deps
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-0 libnotify4 libnss3 libxss1 \
+            libxtst6 xdg-utils libatspi2.0-0 libuuid1 libsecret-1-0 \
+            rpm squashfs-tools fakeroot
+
+      - name: Build Vite
+        run: npx vite build --config vite.config.js
+
+      - name: Build Electron (Windows)
+        if: matrix.os == 'windows-latest'
+        run: npx electron-builder --win --x64
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          WIN_CSC_LINK: ""
+          WIN_CSC_KEY_PASSWORD: ""
+
+      - name: Build Electron (macOS)
+        if: matrix.os == 'macos-latest'
+        run: npx electron-builder --mac
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Electron (Linux)
+        if: matrix.os == 'ubuntu-latest'
+        run: npx electron-builder --linux
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: acmigo-${{ matrix.platform }}
+          path: release/
+          retention-days: 7
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    name: Create GitHub Release
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ACMigo Video Downloader Pro ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: release-artifacts/**/*
+          body: |
+            ## 🎬 ACMigo Video Downloader Pro ${{ github.ref_name }}
+
+            | Platform | File |
+            |----------|------|
+            | 🪟 Windows | `*-Setup.exe` |
+            | 🍎 macOS   | `*.dmg` |
+            | 🐧 Linux   | `*.AppImage` |
+
+            ✅ ffmpeg uključen — MP3/MP4/4K radi bez ikakve instalacije!
+            ✅ Odaberi lokaciju instalacije
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
