@@ -1,0 +1,58 @@
+appId: "com.acmigo.videodownloaderpro"
+productName: "ACMigo Video Downloader Pro"
+copyright: "Copyright © 2024 ACMigo"
+
+directories:
+  output: release
+  buildResources: assets
+
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+  - node_modules/node-schedule/**/*
+  - node_modules/long-timeout/**/*
+  - node_modules/@ffmpeg-installer/**/*
+
+asar: true
+asarUnpack:
+  - "node_modules/@ffmpeg-installer/**/*"
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: portable
+      arch:
+        - x64
+  icon: assets/icon.png
+  signingHashAlgorithms: []
+  sign: null
+
+portable:
+  artifactName: "ACMigo-Portable-${version}.exe" 
+
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  perMachine: false
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: "ACMigo Video Downloader Pro"
+
+mac:
+  target:
+    - target: dmg
+  category: public.app-category.utilities
+  icon: assets/icon.png
+
+linux:
+  target:
+    - target: AppImage
+  category: Network
+  icon: assets/icon.png
+
+publish:
+  provider: github
+  releaseType: release

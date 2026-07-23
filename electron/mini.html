@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; font-family:'Inter',system-ui,sans-serif; }
+body {
+  background: rgba(13,13,36,0.96);
+  border: 1px solid rgba(124,58,237,0.5);
+  border-radius: 14px;
+  color: white;
+  overflow: hidden;
+  user-select: none;
+  -webkit-app-region: drag;
+  min-height: 100vh;
+}
+#header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px 8px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  background: rgba(124,58,237,0.12);
+}
+#logo { font-size:11px; font-weight:700; letter-spacing:0.5px; opacity:0.8; }
+#close {
+  width:13px; height:13px; border-radius:50%;
+  background:#ef4444; border:none; cursor:pointer;
+  -webkit-app-region: no-drag;
+  flex-shrink: 0;
+}
+#close:hover { opacity:0.8; }
+#items { padding: 6px 8px; max-height: 300px; overflow-y:auto; }
+.item {
+  padding: 7px 10px;
+  border-radius: 10px;
+  margin-bottom: 5px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.item-title {
+  font-size:11px;
+  font-weight:500;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  margin-bottom:5px;
+  opacity:0.85;
+}
+.bar-bg { height:3px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+.bar-fill {
+  height:100%;
+  background: linear-gradient(90deg,#7c3aed,#06b6d4);
+  border-radius:2px;
+  transition: width 0.4s ease;
+}
+.meta {
+  display: flex;
+  justify-content: space-between;
+  font-size:10px;
+  color: rgba(255,255,255,0.4);
+  margin-top:4px;
+}
+#empty {
+  padding: 20px 12px;
+  text-align: center;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.6;
+}
+#count {
+  font-size:10px;
+  padding: 4px 12px 6px;
+  color: rgba(255,255,255,0.3);
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius:2px; }
+</style>
+</head>
+<body>
+<div id="header">
+  <span id="logo">▼ ACMigo Downloads</span>
+  <button id="close" title="Close"></button>
+</div>
+<div id="items">
+  <div id="empty">Nema aktivnih preuzimanja</div>
+</div>
+<div id="count"></div>
+
+<script>
+  document.getElementById('close').addEventListener('click', () => {
+    window.acmigo && window.acmigo.close && window.acmigo.close();
+  });
+
+  const itemsEl = document.getElementById('items');
+  const countEl = document.getElementById('count');
+  let downloads = {};
+
+  function render() {
+    const active = Object.values(downloads);
+    countEl.textContent = active.length > 0 ? active.length + ' preuzimanje(a)' : '';
+
+    if (!active.length) {
+      itemsEl.innerHTML = '<div id="empty">Nema aktivnih preuzimanja<br><span style="font-size:10px;opacity:0.5">Pokreni preuzimanje u glavnom prozoru</span></div>';
+      return;
+    }
+
+    itemsEl.innerHTML = active.map(d => {
+      const pct = (d.progress || 0).toFixed(1);
+      const status = d.state === 'converting' ? 'Konverzija…' :
+                     d.state === 'queued'     ? 'U redu…' :
+                     d.speed ? d.speed : pct + '%';
+      return '<div class="item">' +
+        '<div class="item-title">' + escHtml(d.title || d.id) + '</div>' +
+        '<div class="bar-bg"><div class="bar-fill" style="width:' + (d.progress||0) + '%"></div></div>' +
+        '<div class="meta"><span>' + pct + '%</span><span>' + status + '</span></div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function escHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  if (window.acmigo && window.acmigo.on) {
+    window.acmigo.on('download:event', function(evt) {
+      if (!evt || !evt.id) return;
+
+      if (evt.type === 'started' || evt.type === 'queued') {
+        downloads[evt.id] = {
+          id: evt.id,
+          title: evt.title || 'Video...',
+          progress: 0,
+          speed: '',
+          state: evt.type,
+        };
+      } else if (downloads[evt.id]) {
+        var d = downloads[evt.id];
+        if (evt.type === 'progress') {
+          d.progress = evt.percent || 0;
+          d.speed    = evt.speed || '';
+          d.state    = 'downloading';
+        }
+        if (evt.type === 'converting') d.state = 'converting';
+        if (evt.type === 'completed' || evt.type === 'failed' || evt.type === 'cancelled') {
+          delete downloads[evt.id];
+        }
+      }
+
+      render();
+    });
+  }
+</script>
+</body>
+</html>

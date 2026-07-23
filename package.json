@@ -1,0 +1,41 @@
+{
+  "name": "acmigo-video-downloader-pro",
+  "version": "1.0.0",
+  "description": "ACMigo Video Downloader Pro",
+  "main": "electron/main.js",
+  "author": {
+    "name": "ACMigo"
+  },
+  "license": "MIT",
+  "scripts": {
+    "dev": "concurrently -k \"npm run dev:vite\" \"npm run dev:electron\"",
+    "dev:vite": "vite",
+    "dev:electron": "wait-on http://localhost:5173 && electron .",
+    "build": "vite build && electron-builder",
+    "build:win": "vite build && electron-builder --win --x64",
+    "build:mac": "vite build && electron-builder --mac",
+    "build:linux": "vite build && electron-builder --linux"
+  },
+  "dependencies": {
+    "@ffmpeg-installer/ffmpeg": "^1.1.0",
+    "node-schedule": "^2.1.1",
+    "qrcode": "^1.5.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "autoprefixer": "^10.4.17",
+    "concurrently": "^8.2.2",
+    "date-fns": "^3.3.1",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "framer-motion": "^11.0.8",
+    "lucide-react": "^0.363.0",
+    "postcss": "^8.4.35",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.12.2",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.6",
+    "wait-on": "^7.2.0"
+  }
+}

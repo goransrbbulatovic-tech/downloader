@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family: system-ui; }
+  body { width:280px; background:#07071a; color:white; padding:16px; }
+  h2 { font-size:14px; margin-bottom:12px; color:#c4b5fd; display:flex; align-items:center; gap:8px; }
+  .url { font-size:11px; color:rgba(255,255,255,0.4); margin-bottom:12px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  button { width:100%; padding:10px; border-radius:10px; border:none; cursor:pointer; font-size:13px; font-weight:600; margin-bottom:8px; transition:opacity 0.2s; }
+  button:hover { opacity:0.85; }
+  #btnDownload { background:linear-gradient(135deg,#7c3aed,#06b6d4); color:white; }
+  #btnMp3 { background:rgba(6,182,212,0.2); color:#67e8f9; border:1px solid rgba(6,182,212,0.4); }
+  #status { font-size:12px; text-align:center; margin-top:8px; min-height:20px; color:#4ade80; }
+  #notRunning { display:none; font-size:12px; color:#f87171; text-align:center; padding:8px; }
+</style>
+</head>
+<body>
+<h2>🎬 ACMigo Downloader</h2>
+<div class="url" id="pageUrl">Učitavam...</div>
+<button id="btnDownload">⬇ Preuzmi Video (MP4)</button>
+<button id="btnMp3">🎵 Preuzmi Audio (MP3)</button>
+<div id="status"></div>
+<div id="notRunning">⚠ ACMigo nije pokrenut!</div>
+<script src="popup.js"></script>
+</body>
+</html>
